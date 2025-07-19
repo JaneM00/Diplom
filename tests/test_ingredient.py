@@ -1,4 +1,4 @@
-#test_ingredient.py
+# test_ingredient.py
 import pytest
 from praktikum.ingredient import Ingredient
 from praktikum.ingredient_types import INGREDIENT_TYPE
