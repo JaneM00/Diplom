@@ -1,48 +1,72 @@
-from typing import List
+#burger.py 
+import pytest
+from unittest.mock import Mock, patch
+from burger import Burger, Ingredient
 
-from praktikum.bun import Bun
-from praktikum.ingredient import Ingredient
 
+class TestBurger:
+    @pytest.fixture
+    def sample_ingredients(self):
+        return [
+            Ingredient("flour", "sauce", 100),
+            Ingredient("beef", "main", 200),
+            Ingredient("tomato", "filling", 50)
+        ]
 
-class Burger:
-    """
-    Модель бургера.
-    Бургер состоит из булочек и ингредиентов (начинка или соус).
-    Ингредиенты можно перемещать и удалять.
-    Можно распечать чек с информацией о бургере.
-    """
+    @pytest.mark.parametrize("ingredient_type,expected_price", [
+        ("sauce", 100),
+        ("main", 200),
+        ("filling", 50),
+        ("unknown", 0)
+    ])
+    def test_get_price_by_type(self, sample_ingredients, ingredient_type, expected_price):
+        burger = Burger()
+        for ingredient in sample_ingredients:
+            burger.add_ingredient(ingredient)
+        
+        assert burger.get_price_by_type(ingredient_type) == expected_price
 
-    def __init__(self):
-        self.bun = None
-        self.ingredients: List[Ingredient] = []
+    def test_add_ingredient(self, sample_ingredients):
+        burger = Burger()
+        initial_count = len(burger.ingredients)
+        
+        for ingredient in sample_ingredients:
+            burger.add_ingredient(ingredient)
+        
+        assert len(burger.ingredients) == initial_count + len(sample_ingredients)
 
-    def set_buns(self, bun: Bun):
-        self.bun = bun
+    def test_remove_ingredient(self, sample_ingredients):
+        burger = Burger()
+        for ingredient in sample_ingredients:
+            burger.add_ingredient(ingredient)
+        
+        initial_count = len(burger.ingredients)
+        burger.remove_ingredient(sample_ingredients[0])
+        
+        assert len(burger.ingredients) == initial_count - 1
 
-    def add_ingredient(self, ingredient: Ingredient):
-        self.ingredients.append(ingredient)
+    def test_get_total_price(self, sample_ingredients):
+        burger = Burger()
+        for ingredient in sample_ingredients:
+            burger.add_ingredient(ingredient)
+        
+        expected_price = sum(ingredient.price for ingredient in sample_ingredients)
+        assert burger.get_total_price() == expected_price
 
-    def remove_ingredient(self, index: int):
-        del self.ingredients[index]
+    def test_get_receipt(self, sample_ingredients):
+        burger = Burger()
+        for ingredient in sample_ingredients:
+            burger.add_ingredient(ingredient)
+        
+        receipt = burger.get_receipt()
+        assert isinstance(receipt, str)
+        for ingredient in sample_ingredients:
+            assert ingredient.name in receipt
+        assert str(burger.get_total_price()) in receipt
 
-    def move_ingredient(self, index: int, new_index: int):
-        self.ingredients.insert(new_index, self.ingredients.pop(index))
-
-    def get_price(self) -> float:
-        price = self.bun.get_price() * 2
-
-        for ingredient in self.ingredients:
-            price += ingredient.get_price()
-
-        return price
-
-    def get_receipt(self) -> str:
-        receipt: List[str] = [f'(==== {self.bun.get_name()} ====)']
-
-        for ingredient in self.ingredients:
-            receipt.append(f'= {str(ingredient.get_type()).lower()} {ingredient.get_name()} =')
-
-        receipt.append(f'(==== {self.bun.get_name()} ====)\n')
-        receipt.append(f'Price: {self.get_price()}')
-
-        return '\n'.join(receipt)
+    @patch('burger.Burger.get_total_price')
+    def test_get_receipt_with_mocked_price(self, mock_get_total_price):
+        mock_get_total_price.return_value = 350
+        burger = Burger()
+        receipt = burger.get_receipt()
+        assert "350" in receipt
