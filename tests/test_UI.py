@@ -109,7 +109,7 @@ class TestOrderFeed:
         with allure.step("Verify total counter increased"):
             assert order_feed_page.get_total_orders_count() > initial_total
 
-@allure.story("Order Feed Updates")
+    @allure.story("Order Feed Updates")
     @allure.title("Check today orders counter")
     def test_today_orders_counter(self, driver, create_order):
         order_feed_page = OrderFeedPage(driver)
