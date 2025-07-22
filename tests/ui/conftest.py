@@ -3,10 +3,10 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from pages import MainPage, LoginPage, OrderFeedPage
 
 @pytest.fixture(params=["chrome", "firefox"])
 def driver(request):
+    """Фикстура для инициализации драйвера с поддержкой мультибраузерности"""
     if request.param == "chrome":
         options = ChromeOptions()
         options.add_argument("--headless")
@@ -21,13 +21,16 @@ def driver(request):
     driver.quit()
 
 @pytest.fixture
-def main_page(driver):
-    return MainPage(driver)
-
-@pytest.fixture
-def login_page(driver):
-    return LoginPage(driver)
-
-@pytest.fixture
-def order_feed_page(driver):
-    return OrderFeedPage(driver)
+def authorized_user(driver):
+    """Фикстура для авторизации пользователя (сложная логика предусловия)"""
+    from pages.login_page import LoginPage
+    from pages.main_page import MainPage
+    
+    login_page = LoginPage(driver)
+    main_page = MainPage(driver)
+    
+    # Выполняем авторизацию
+    login_page.open()
+    login_page.login("test@example.com", "password123")
+    
+    yield main_page
