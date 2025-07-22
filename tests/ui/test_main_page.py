@@ -1,6 +1,5 @@
 # test_main_page.py
 import allure
-import allure
 
 @allure.feature("Главная страница")
 class TestMainPage:
