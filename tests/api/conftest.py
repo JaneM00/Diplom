@@ -1,34 +1,39 @@
 # conftest.py
 import pytest
 import allure
+from faker import Faker
 from .helpers import APIHelper
 from .data import TestData
 
-@pytest.fixture
-def api():
-    return APIHelper()
+fake = Faker()
 
 @pytest.fixture
-def random_user():
-    return TestData.random_user()
-
-@pytest.fixture
-def registered_user(api, random_user):
-    # Создание пользователя
-    response = api.register_user(random_user)
-    assert response.status_code == 200
-    token = response.json()["accessToken"]
+def registered_user():
+    """Фикстура создает и удаляет тестового пользователя"""
+    api = APIHelper()
+    user_data = {
+        "email": fake.email(),
+        "password": fake.password(),
+        "name": fake.first_name()
+    }
     
-    yield {"user": random_user, "token": token}
+    # Создание пользователя (предусловие)
+    with allure.step("Регистрация тестового пользователя"):
+        response = api.register_user(user_data)
+        assert response.status_code == 200
+        token = response.json()["accessToken"]
     
-    # Удаление пользователя после теста
-    with allure.step("Cleanup: delete test user"):
+    yield {"user": user_data, "token": token}
+    
+    # Удаление пользователя (постусловие)
+    with allure.step("Удаление тестового пользователя"):
         api.delete_user(token)
 
 @pytest.fixture
 def valid_ingredients():
-    return TestData.valid_ingredients()
-
-@pytest.fixture
-def invalid_ingredients():
-    return TestData.invalid_ingredients()
+    """Фикстура получает валидные ингредиенты из API"""
+    api = APIHelper()
+    with allure.step("Получение списка ингредиентов"):
+        response = api.get_ingredients()
+        assert response.status_code == 200
+        return [ingredient["_id"] for ingredient in response.json()["data"]]
