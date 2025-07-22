@@ -1,26 +1,32 @@
 # main_page.py
-from selenium.webdriver.common.by import By
-from .base_page import BasePage
-from .urls import Urls
-import allure
+def navigate_to_constructor(self):
+    self.click(self.CONSTRUCTOR_LINK)
+    return self
 
-class MainPage(BasePage):
-    CONSTRUCTOR_LINK = (By.XPATH, "//a[contains(@class, 'AppHeader_header__link') and contains(text(), 'Конструктор')]")
-    ORDER_FEED_LINK = (By.LINK_TEXT, "Лента заказов")
-    INGREDIENT_ITEM = (By.XPATH, "//div[contains(@class, 'Ingredient_ingredient')][1]")
-    INGREDIENT_MODAL = (By.XPATH, "//div[contains(@class, 'Modal_modal')]")
-    MODAL_CLOSE_BUTTON = (By.XPATH, "//button[contains(@class, 'Modal_close')]")
-    CONSTRUCTOR_AREA = (By.XPATH, "//div[contains(@class, 'BurgerConstructor_basket')]")
-    ORDER_BUTTON = (By.XPATH, "//button[contains(text(), 'Оформить заказ')]")
-    INGREDIENT_COUNTER = (By.XPATH, "//div[contains(@class, 'Ingredient_counter')]")
-    INGREDIENT_DETAILS = (By.XPATH, "//div[contains(@class, 'IngredientDetails_details')]")
+def navigate_to_order_feed(self):
+    self.click(self.ORDER_FEED_LINK)
+    return self
 
-    @allure.step("Открыть главную страницу")
-    def open_main_page(self):
-        return self.open(Urls.BASE)
+def is_constructor_active(self):
+    return "current" in self.get_element_attribute(self.CONSTRUCTOR_LINK, "class")
 
-    @allure.step("Добавить ингредиент в конструктор")
-    def add_ingredient_to_constructor(self, ingredient_type: str):
-        ingredient_locator = (By.XPATH, f"//div[contains(text(), '{ingredient_type}')]")
-        self.drag_and_drop(ingredient_locator, self.CONSTRUCTOR_AREA)
-        return self
+def is_order_feed_visible(self):
+    from pages.order_feed_page import OrderFeedPage
+    return OrderFeedPage(self.driver).is_visible()
+
+def open_ingredient_details(self, ingredient_type):
+    locator = (By.XPATH, f"//div[contains(text(), '{ingredient_type}')]")
+    self.click(locator)
+    return self
+
+def are_ingredient_details_visible(self):
+    return self.is_element_visible(self.INGREDIENT_DETAILS)
+
+def get_ingredient_counter(self, ingredient_type):
+    locator = (By.XPATH, f"//div[contains(text(), '{ingredient_type}')]//following-sibling::div[contains(@class, 'counter')]")
+    return int(self.get_text(locator)) if self.is_element_present(locator) else 0
+
+def add_ingredient_to_constructor(self, ingredient_type):
+    ingredient_locator = (By.XPATH, f"//div[contains(text(), '{ingredient_type}')]")
+    self.drag_and_drop(ingredient_locator, self.CONSTRUCTOR_AREA)
+    return self
